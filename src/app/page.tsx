@@ -66,10 +66,20 @@ export default function Home() {
 
     // 2. 구글 시트에서 최신 데이터 가져와 동기화
     const fetchNotes = async () => {
-      if (!API_URL) return;
+      if (!API_URL) {
+        console.error("오류: API_URL이 비어있습니다. .env.local 설정을 확인하세요.");
+        return;
+      }
+      
+      console.log("데이터 동기화 시도 중... URL:", API_URL);
       setLoading(true);
       try {
         const response = await fetch(API_URL);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         // 데이터 정제 및 고유 ID 확보
@@ -93,9 +103,11 @@ export default function Home() {
         if (formattedData.length > 0) {
           setNotes(formattedData);
           localStorage.setItem("postit_notes", JSON.stringify(formattedData));
+          console.log("서버에서 최신 데이터를 성공적으로 불러왔습니다.");
         }
       } catch (error) {
-        console.error("클라우드 데이터를 불러오지 못했습니다. 로컬 데이터를 사용합니다.");
+        console.error("⚠️ 시트 연동 실패:", error);
+        console.warn("해결 방법: 구글 앱 스크립트 배포 시 '액세스 권한: 모든 사용자'인지 확인하고, 브라우저의 광고 차단기를 꺼보세요.");
       } finally {
         setLoading(false);
       }
